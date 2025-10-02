@@ -24,15 +24,19 @@ public class GameController : MonoBehaviour
         GameObject newTextObj = Instantiate(playerTextPrefab);
         newTextObj.transform.SetParent(playerTextContainer, false);
 
-        // Use TMP component
         TextMeshProUGUI textComp = newTextObj.GetComponent<TextMeshProUGUI>();
-        if (textComp == null)
-        {
-            Debug.LogError("TextMeshProUGUI component missing on prefab!");
-            return;
-        }
+        if (textComp == null) return;
 
         textComp.text = "Player " + device_id;
+        textComp.color = Color.white;
+        textComp.fontSize = 30;
+
+        // Position each player vertically so they don’t overlap
+        RectTransform rt = newTextObj.GetComponent<RectTransform>();
+        float yOffset = -60f * playerTexts.Count; // 60 pixels apart
+        rt.anchoredPosition = new Vector2(0, yOffset);
+        rt.sizeDelta = new Vector2(200, 50);
+
         playerTexts[device_id] = textComp;
     }
 
