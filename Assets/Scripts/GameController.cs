@@ -7,8 +7,9 @@ using TMPro;
 
 public class GameController : MonoBehaviour
 {
-    public GameObject playerTextPrefab; // Assign a Text prefab in Unity
-    public Transform playerTextContainer; // Parent object for text boxes
+    [Header("UI References")]
+    public GameObject playerTextPrefab;           // Assign a prefab with TextMeshProUGUI
+    public Transform playerTextContainer;         // Parent object under a Canvas
 
     private Dictionary<int, TextMeshProUGUI> playerTexts = new Dictionary<int, TextMeshProUGUI>();
 
@@ -19,47 +20,69 @@ public class GameController : MonoBehaviour
         AirConsole.instance.onMessage += OnMessage;
     }
 
-    void OnPlayerConnect(int device_id)
+    void OnDestroy()
     {
-        GameObject newTextObj = Instantiate(playerTextPrefab);
-        newTextObj.transform.SetParent(playerTextContainer, false);
+        // Clean up event listeners to avoid memory leaks
+        if (AirConsole.instance != null)
+        {
+            AirConsole.instance.onConnect -= OnPlayerConnect;
+            AirConsole.instance.onDisconnect -= OnPlayerDisconnect;
+            AirConsole.instance.onMessage -= OnMessage;
+        }
+    }
+
+    void OnPlayerConnect(int deviceId)
+    {
+        if (playerTextPrefab == null || playerTextContainer == null)
+        {
+            Debug.LogWarning("Missing playerTextPrefab or playerTextContainer.");
+            return;
+        }
+
+        GameObject newTextObj = Instantiate(playerTextPrefab, playerTextContainer);
+        newTextObj.transform.localScale = Vector3.one; // Ensure correct scaling
 
         TextMeshProUGUI textComp = newTextObj.GetComponent<TextMeshProUGUI>();
-        if (textComp == null) return;
+        if (textComp == null)
+        {
+            Debug.LogError("playerTextPrefab is missing a TextMeshProUGUI component.");
+            Destroy(newTextObj);
+            return;
+        }
 
-        textComp.text = "Player " + device_id;
+        textComp.text = "Player " + deviceId;
         textComp.color = Color.white;
         textComp.fontSize = 30;
 
-        // Position each player vertically so they don’t overlap
         RectTransform rt = newTextObj.GetComponent<RectTransform>();
-        float yOffset = -60f * playerTexts.Count; // 60 pixels apart
-        rt.anchoredPosition = new Vector2(0, yOffset);
-        rt.sizeDelta = new Vector2(200, 50);
+        if (rt != null)
+        {
+            float yOffset = -60f * playerTexts.Count;
+            rt.anchoredPosition = new Vector2(0, yOffset);
+            rt.sizeDelta = new Vector2(200, 50);
+        }
 
-        playerTexts[device_id] = textComp;
+        playerTexts[deviceId] = textComp;
     }
 
-
-    void OnPlayerDisconnect(int device_id)
+    void OnPlayerDisconnect(int deviceId)
     {
-        // Remove the player's text box
-        if (playerTexts.ContainsKey(device_id))
+        if (playerTexts.TryGetValue(deviceId, out TextMeshProUGUI textComp))
         {
-            Destroy(playerTexts[device_id].gameObject);
-            playerTexts.Remove(device_id);
+            Destroy(textComp.gameObject);
+            playerTexts.Remove(deviceId);
         }
     }
 
     void OnMessage(int from, JToken data)
     {
-        Debug.Log("Message received from " + from + ": " + data.ToString());
+        Debug.Log($"Message received from {from}: {data}");
 
-        if (data["name"] != null && playerTexts.ContainsKey(from))
+        if (data["name"] != null && playerTexts.TryGetValue(from, out TextMeshProUGUI textComp))
         {
-            playerTexts[from].text = data["name"].ToString();
-            Debug.Log("Updated text for player " + from + " to " + data["name"]);
+            string playerName = data["name"].ToString();
+            textComp.text = playerName;
+            Debug.Log($"Updated text for player {from} to {playerName}");
         }
     }
-
 }

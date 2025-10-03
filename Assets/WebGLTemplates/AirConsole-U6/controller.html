@@ -7,13 +7,15 @@
 <body>
     <h1>Enter your name:</h1>
     <input type="text" id="nameInput" placeholder="Your Name">
+    <button id="submitBtn">Submit</button>
     
     <script>
         var ac = new AirConsole();
 
         var nameInput = document.getElementById("nameInput");
+        var submitBtn = document.getElementById("submitBtn");
 
-        nameInput.addEventListener("input", function() {
+        submitBtn.addEventListener("click", function() {
             ac.message(AirConsole.SCREEN, { name: nameInput.value });
         });
     </script>
