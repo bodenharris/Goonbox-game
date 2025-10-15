@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AirConsole Controller</title>
+    <title>AirConsole Trivia Controller</title>
     <script src="https://www.airconsole.com/api/airconsole-1.8.0.js"></script>
 </head>
 <body>
-    <h1>Enter your name:</h1>
-    <input type="text" id="nameInput" placeholder="Your Name">
+    <h1>Answer the Question:</h1>
+    <input type="text" id="answerInput" placeholder="Your answer">
     <button id="submitBtn">Submit</button>
-    
+
     <script>
         var ac = new AirConsole();
 
-        var nameInput = document.getElementById("nameInput");
+        var answerInput = document.getElementById("answerInput");
         var submitBtn = document.getElementById("submitBtn");
 
         submitBtn.addEventListener("click", function() {
-            ac.message(AirConsole.SCREEN, { name: nameInput.value });
+            var answer = answerInput.value;
+            if (answer.trim() !== "") {
+                ac.message(AirConsole.SCREEN, { answer: answer });
+                answerInput.value = ""; // clear after submit
+            }
         });
     </script>
 </body>
