@@ -49,20 +49,38 @@ public class TriviaManager : MonoBehaviour
         if (data["answer"] != null)
         {
             string playerAnswer = data["answer"].ToString().Trim();
+            string correctAnswer = answers[currentQuestionIndex];
+            string feedbackMessage;
 
-            if (string.Equals(playerAnswer, answers[currentQuestionIndex], System.StringComparison.OrdinalIgnoreCase))
+            bool isCorrect = string.Equals(
+                playerAnswer,
+                correctAnswer,
+                System.StringComparison.OrdinalIgnoreCase
+            );
+
+            if (isCorrect)
             {
-                feedbackText.text = $"Player {fromDeviceId}: Correct!";
-                feedbackText.color = Color.green;
+                feedbackMessage = "Correct!";
+                Debug.Log($"Player {fromDeviceId}: Correct!");
             }
             else
             {
-                feedbackText.text = $"Player {fromDeviceId}: Wrong! Correct answer: {answers[currentQuestionIndex]}";
-                feedbackText.color = Color.red;
+                feedbackMessage = $"Wrong! Correct answer: {correctAnswer}";
+                Debug.Log($"Player {fromDeviceId}: Wrong! Answer was {correctAnswer}");
             }
 
-            // Optionally move to next question automatically
-            Invoke("ShowRandomQuestion", 3f); // 3-second delay before next question
+            // Send feedback directly to that player's controller
+            AirConsole.instance.Message(fromDeviceId, new
+            {
+                feedback = feedbackMessage
+            });
+
+            // Optional: show something minimal on the main screen
+            feedbackText.text = $"Player {fromDeviceId} answered!";
+            feedbackText.color = Color.white;
+
+            // Move to next question after a delay
+            Invoke("ShowRandomQuestion", 3f);
         }
     }
 }

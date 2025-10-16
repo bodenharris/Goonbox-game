@@ -3,23 +3,57 @@
 <head>
     <title>AirConsole Trivia Controller</title>
     <script src="https://www.airconsole.com/api/airconsole-1.8.0.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        input, button {
+            font-size: 1.2em;
+            margin: 10px;
+            padding: 10px;
+        }
+        #feedback {
+            font-size: 1.4em;
+            margin-top: 20px;
+            transition: opacity 0.5s;
+        }
+    </style>
 </head>
 <body>
     <h1>Answer the Question:</h1>
     <input type="text" id="answerInput" placeholder="Your answer">
     <button id="submitBtn">Submit</button>
+    <p id="feedback"></p>
 
     <script>
         var ac = new AirConsole();
-
         var answerInput = document.getElementById("answerInput");
         var submitBtn = document.getElementById("submitBtn");
+        var feedbackEl = document.getElementById("feedback");
 
+        // Receive feedback from the main screen (Unity)
+        ac.onMessage = function(from, data) {
+            if (data.feedback) {
+                feedbackEl.textContent = data.feedback;
+                feedbackEl.style.color = data.feedback.includes("Correct") ? "green" : "red";
+                feedbackEl.style.opacity = 1;
+
+                // Hide feedback after 3 seconds
+                setTimeout(() => {
+                    feedbackEl.style.opacity = 0;
+                }, 3000);
+            }
+        };
+
+        // Send player's answer to the main screen
         submitBtn.addEventListener("click", function() {
-            var answer = answerInput.value;
-            if (answer.trim() !== "") {
+            var answer = answerInput.value.trim();
+            if (answer !== "") {
                 ac.message(AirConsole.SCREEN, { answer: answer });
-                answerInput.value = ""; // clear after submit
+                answerInput.value = ""; // Clear input
             }
         });
     </script>
